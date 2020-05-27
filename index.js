@@ -6,7 +6,10 @@ let {
   Pool,
   initPointer,
   onPointerDown,
+  pointerOver,
+  pointerPressed,
   pointer,
+  track,
   GameLoop,
 } = kontra;
 
@@ -14,13 +17,22 @@ let { canvas, context } = init();
 initKeys();
 initPointer();
 
-let turnCounter = 'p1';
+let turnCounter = "p1";
+let startTurn = false;
+
+const swapTurnButton = Sprite({
+  x: canvas.height / 2,
+  y: canvas.width / 2,
+  height: 30,
+  width: 70,
+  color: "green",
+});
 
 let player1 = new Sprite({
   x: 100, // starting x,y position of the sprite
   y: 20,
-	color: "red", // fill color of the sprite rectangle
-	playerKey: "p1",
+  color: "red", // fill color of the sprite rectangle
+  playerKey: "p1",
   width: 20, // width and height of the sprite rectangle
   height: 20,
   moveSpeed: 2,
@@ -31,8 +43,8 @@ let player1 = new Sprite({
 let player2 = new Sprite({
   x: 100, // starting x,y position of the sprite
   y: canvas.height - 20,
-	color: "blue", // fill color of the sprite rectangle
-	playerKey: "p2",
+  color: "blue", // fill color of the sprite rectangle
+  playerKey: "p2",
   width: 20, // width and height of the sprite rectangle
   height: 20,
   moveSpeed: 2,
@@ -51,48 +63,67 @@ let loop = GameLoop({
   update: function () {
     // update the game state
     player1.update();
-		player2.update();
-		if(turnCounter === "p1"){
-			movePlayer(player1);
-			playerSwitcher(player1, player2);
-			onPointerDown(() => {
-				shoot(player1, pointer);
-			});
-		} else {
-			movePlayer(player2);
-			playerSwitcher(player2, player1);
-			onPointerDown(() => {
-				shoot(player2, pointer);
-			});
-		}
+    player2.update();
 
-    
+    if (startTurn) {
+      if (turnCounter === "p1") {
+        // if(startTurn){
+        movePlayer(player1);
+        playerSwitcher(player1, player2);
+        onPointerDown(() => {
+          shoot(player1, pointer);
+        });
+        // }
+      } else {
+        // if(startTurn){
+        movePlayer(player2);
+        playerSwitcher(player2, player1);
+        onPointerDown(() => {
+          shoot(player2, pointer);
+        });
+        // }
+      }
+    } else {
+      track(swapTurnButton);
+
+      if (pointerPressed("left") && pointerOver(swapTurnButton)) {
+        // left mouse button pressed
+        startTurn = true;
+      }
+    }
+
     // console.log(pointer)
-		bulletPool.update();
-		
-		if(keyPressed("r")){
-			restartGame();
-		}
+    bulletPool.update();
+
+    if (keyPressed("r")) {
+      restartGame();
+    }
   },
   render: function () {
     // render the game state
     player1.render();
     textMaker(
       context,
-      player1.x - player1.width /2,
+      player1.x - player1.width / 2,
       player1.y - player1.height + 4,
       player1.stamina,
       10
     );
     bulletPool.render();
-		player2.render();
-		textMaker(
+    player2.render();
+    textMaker(
       context,
-      player2.x - player2.width /2,
+      player2.x - player2.width / 2,
       player2.y - player2.height + 4,
       player2.stamina,
       10
     );
+
+    //Swap turn button
+			if(!startTurn){
+				swapTurnButton.render();
+				textMaker(context, swapTurnButton.x + 4, swapTurnButton.y + swapTurnButton.height/2 +2, `START ${turnCounter.toUpperCase()} TURN`, 8 )
+			}
   },
 });
 
@@ -139,10 +170,10 @@ const Between = (x1, y1, x2, y2) => {
 
 //Control how much stamina they have before they have to stop moving and switch turns
 const drainStamina = (drainAmount, player) => {
-	player.stamina -= drainAmount / 2;
-	if(player.stamina < 0){
-		player.stamina = 0;
-	}
+  player.stamina -= drainAmount / 2;
+  if (player.stamina < 0) {
+    player.stamina = 0;
+  }
 };
 
 const textMaker = (context, x, y, text, size) => {
@@ -155,34 +186,35 @@ const textMaker = (context, x, y, text, size) => {
 };
 
 const restartGame = () => {
-	player1 = new Sprite({
-		x: 100, // starting x,y position of the sprite
-		y: 20,
-		color: "red", // fill color of the sprite rectangle
-		width: 20, // width and height of the sprite rectangle
-		height: 20,
-		moveSpeed: 2,
-		stamina: 100,
-		anchor: { x: 0.5, y: 0.5 },
-	});
+  player1 = new Sprite({
+    x: 100, // starting x,y position of the sprite
+    y: 20,
+    color: "red", // fill color of the sprite rectangle
+    width: 20, // width and height of the sprite rectangle
+    height: 20,
+    moveSpeed: 2,
+    stamina: 100,
+    anchor: { x: 0.5, y: 0.5 },
+  });
 
-	player2 = new Sprite({
-		x: 100, // starting x,y position of the sprite
-		y: canvas.height - 20,
-		color: "blue", // fill color of the sprite rectangle
-		width: 20, // width and height of the sprite rectangle
-		height: 20,
-		moveSpeed: 10,
-		stamina: 100,
-		anchor: { x: 0.5, y: 0.5 },
-	});
-}
+  player2 = new Sprite({
+    x: 100, // starting x,y position of the sprite
+    y: canvas.height - 20,
+    color: "blue", // fill color of the sprite rectangle
+    width: 20, // width and height of the sprite rectangle
+    height: 20,
+    moveSpeed: 10,
+    stamina: 100,
+    anchor: { x: 0.5, y: 0.5 },
+  });
+};
 
 const playerSwitcher = (player, otherPlayer) => {
-	if(player.stamina < 1){
-		otherPlayer.stamina = 100;
-		turnCounter = otherPlayer.playerKey;
-	}
-}
+	if (player.stamina < 1) {
+		startTurn = false;
+    otherPlayer.stamina = 100;
+    turnCounter = otherPlayer.playerKey;
+  }
+};
 
 loop.start(); // start the game
