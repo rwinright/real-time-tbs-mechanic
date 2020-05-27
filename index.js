@@ -19,18 +19,20 @@ initPointer();
 
 let turnCounter = "p1";
 let startTurn = false;
+let winText = '';
 
 const swapTurnButton = Sprite({
-  x: (canvas.width / 2 ) - 35,
-  y: (canvas.height / 2) - 15,
+  x: canvas.width / 2 - 35,
+  y: canvas.height / 2 - 15,
   height: 30,
   width: 70,
   color: "green",
 });
 
 let player1 = new Sprite({
-  x: (canvas.width / 2) - 10, // starting x,y position of the sprite
+  x: canvas.width / 2 - 10, // starting x,y position of the sprite
   y: 20,
+  health: 20,
   color: "red", // fill color of the sprite rectangle
   playerKey: "p1",
   width: 20, // width and height of the sprite rectangle
@@ -41,8 +43,9 @@ let player1 = new Sprite({
 });
 
 let player2 = new Sprite({
-  x: (canvas.width / 2) - 10 , // starting x,y position of the sprite
+  x: canvas.width / 2 - 10, // starting x,y position of the sprite
   y: canvas.height - 20,
+  health: 20,
   color: "blue", // fill color of the sprite rectangle
   playerKey: "p2",
   width: 20, // width and height of the sprite rectangle
@@ -55,15 +58,16 @@ let player2 = new Sprite({
 const bulletPool = Pool({
   create: Sprite,
   size: 1,
-  maxSize: 5000, //Adjust this to set the number of pooled players on the screen at once.
+  maxSize: 5000, //Adjust this to set the number of pooled bullets on the screen at once.
 });
 
 let loop = GameLoop({
   // create the main game loop
   update: function () {
     // update the game state
-    player1.update();
-    player2.update();
+		
+		playerUpdater(player1);
+		playerUpdater(player2);
 
     if (startTurn) {
       if (turnCounter === "p1") {
@@ -72,51 +76,56 @@ let loop = GameLoop({
         onPointerDown(() => {
           shoot(player1, pointer);
         });
+        bulletCollision(player2);
       } else {
         movePlayer(player2);
         playerSwitcher(player2, player1);
         onPointerDown(() => {
           shoot(player2, pointer);
         });
+        bulletCollision(player1);
       }
     } else {
-      track(swapTurnButton);
-
+			track(swapTurnButton);
+			checkWin([player1, player2]);
       if (pointerPressed("left") && pointerOver(swapTurnButton)) {
-        // left mouse button pressed
         startTurn = true;
       }
     }
 
-    // console.log(pointer)
     bulletPool.update();
-
   },
   render: function () {
     // render the game state
-    player1.render();
-    textMaker(
-      context,
-      player1.x - player1.width / 2,
-      player1.y - player1.height + 4,
-      player1.stamina,
-      10
-    );
     bulletPool.render();
-    player2.render();
-    textMaker(
-      context,
-      player2.x - player2.width / 2,
-      player2.y - player2.height + 4,
-      player2.stamina,
-      10
-    );
+
+    playerRenderer(player1);
+		playerRenderer(player2);
+		
+		if(winText){
+			
+		}
 
     //Swap turn button
-			if(!startTurn){
-				swapTurnButton.render();
-				textMaker(context, swapTurnButton.x + 4, swapTurnButton.y + swapTurnButton.height/2 +2, `START ${turnCounter.toUpperCase()} TURN`, 8 )
-			}
+    if (!startTurn && !winText) {
+      swapTurnButton.render();
+      textMaker(
+        context,
+        swapTurnButton.x + 4,
+        swapTurnButton.y + swapTurnButton.height / 2 + 2,
+        `START ${turnCounter.toUpperCase()} TURN`,
+        8
+      );
+    } else {
+			textMaker(
+				context,
+				canvas.width/2 - (winText.length * 5),
+				canvas.height/2,
+				winText,
+				20,
+				winText.includes('p1') ? "red" : "blue"
+			);
+		}
   },
 });
 
@@ -133,7 +142,7 @@ const movePlayer = (player) => {
 };
 
 const shoot = (player, cursor) => {
-  if (player.stamina < 1) return;
+  if (player.stamina < 1 || player.health < 1) return;
   drainStamina(16, player);
 
   let betweenDistance = Between(player.x, player.y, cursor.x, cursor.y);
@@ -147,6 +156,7 @@ const shoot = (player, cursor) => {
     x: player.x,
     y: player.y,
     color: "green",
+    damage: 5,
     width: 5,
     anchor: { x: 0.5, y: 0.5 },
     height: 5,
@@ -169,20 +179,69 @@ const drainStamina = (drainAmount, player) => {
   }
 };
 
-const textMaker = (context, x, y, text, size) => {
+const textMaker = (context, x, y, text, size, color) => {
   if (!size) {
     size = 10;
   }
-  context.fillStyle = "white";
+  context.fillStyle = color ? color : "white";
   context.font = `${size}px Courier New`;
   context.fillText(text, x, y);
 };
 
 const playerSwitcher = (player, otherPlayer) => {
-	if (player.stamina < 1) {
-		startTurn = false;
+  if (player.stamina < 1) {
+    startTurn = false;
     otherPlayer.stamina = 100;
     turnCounter = otherPlayer.playerKey;
+  }
+};
+
+const bulletCollision = (player) => {
+  let bullets = bulletPool.getAliveObjects();
+  bullets.forEach((b) => {
+    if (b.collidesWith(player)) {
+      //Collide functionality
+      b.ttl = 0;
+      player.health -= b.damage;
+    }
+  });
+};
+
+const checkWin = (players) => {
+	activePlayers = players.filter(player => {
+		if(player.health > 0) return player;
+	});
+
+	if(activePlayers.length === 1){
+		winText = `${activePlayers[0].playerKey} is the winner`;
+		loop.stop();
+	}
+}
+
+const playerUpdater = (player) => {
+	if(player.health > 0) player.update();
+}
+
+const playerRenderer = (player) => {
+  if (player.health > 0) {
+    player.render();
+    //Show stamina text
+    textMaker(
+      context,
+      player.x - player.width / 2,
+      player.y - player.height + 4,
+      player.stamina,
+      10
+    );
+    //show health text
+    textMaker(
+      context,
+      player.x - player.width / 2 + 5,
+      player.y + player.height / 2 - 8,
+      player.health,
+      10,
+      "#90FF33"
+    );
   }
 };
 
