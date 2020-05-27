@@ -104,9 +104,6 @@ let loop = GameLoop({
   update: function () {
     // update the game state
 
-    // playerUpdater(player1);
-    // playerUpdater(player2);
-
     squads.forEach((squad) => {
 			squad.players.forEach((player) => {
 				playerUpdater(player);
