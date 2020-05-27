@@ -21,15 +21,15 @@ let turnCounter = "p1";
 let startTurn = false;
 
 const swapTurnButton = Sprite({
-  x: canvas.height / 2,
-  y: canvas.width / 2,
+  x: (canvas.width / 2 ) - 35,
+  y: (canvas.height / 2) - 15,
   height: 30,
   width: 70,
   color: "green",
 });
 
 let player1 = new Sprite({
-  x: 100, // starting x,y position of the sprite
+  x: (canvas.width / 2) - 10, // starting x,y position of the sprite
   y: 20,
   color: "red", // fill color of the sprite rectangle
   playerKey: "p1",
@@ -41,7 +41,7 @@ let player1 = new Sprite({
 });
 
 let player2 = new Sprite({
-  x: 100, // starting x,y position of the sprite
+  x: (canvas.width / 2) - 10 , // starting x,y position of the sprite
   y: canvas.height - 20,
   color: "blue", // fill color of the sprite rectangle
   playerKey: "p2",
