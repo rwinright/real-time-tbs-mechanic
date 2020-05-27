@@ -19,7 +19,7 @@ initPointer();
 
 let turnCounter = "p1";
 let startTurn = false;
-let winText = '';
+let winText = "";
 
 const swapTurnButton = Sprite({
   x: canvas.width / 2 - 35,
@@ -65,9 +65,9 @@ let loop = GameLoop({
   // create the main game loop
   update: function () {
     // update the game state
-		
-		playerUpdater(player1);
-		playerUpdater(player2);
+
+    playerUpdater(player1);
+    playerUpdater(player2);
 
     if (startTurn) {
       if (turnCounter === "p1") {
@@ -86,8 +86,8 @@ let loop = GameLoop({
         bulletCollision(player1);
       }
     } else {
-			track(swapTurnButton);
-			checkWin([player1, player2]);
+      track(swapTurnButton);
+      checkWin([player1, player2]);
       if (pointerPressed("left") && pointerOver(swapTurnButton)) {
         startTurn = true;
       }
@@ -100,11 +100,10 @@ let loop = GameLoop({
     bulletPool.render();
 
     playerRenderer(player1);
-		playerRenderer(player2);
-		
-		if(winText){
-			
-		}
+    playerRenderer(player2);
+
+    if (winText) {
+    }
 
     //Swap turn button
     if (!startTurn && !winText) {
@@ -117,15 +116,15 @@ let loop = GameLoop({
         8
       );
     } else {
-			textMaker(
-				context,
-				canvas.width/2 - (winText.length * 5),
-				canvas.height/2,
-				winText,
-				20,
-				winText.includes('p1') ? "red" : "blue"
-			);
-		}
+      textMaker(
+        context,
+        canvas.width / 2 - winText.length * 5,
+        canvas.height / 2,
+        winText,
+        20,
+        winText.includes("p1") ? "red" : "blue"
+      );
+    }
   },
 });
 
@@ -208,19 +207,19 @@ const bulletCollision = (player) => {
 };
 
 const checkWin = (players) => {
-	activePlayers = players.filter(player => {
-		if(player.health > 0) return player;
-	});
+  activePlayers = players.filter((player) => {
+    if (player.health > 0) return player;
+  });
 
-	if(activePlayers.length === 1){
-		winText = `${activePlayers[0].playerKey} is the winner`;
-		loop.stop();
-	}
-}
+  if (activePlayers.length === 1) {
+    winText = `${activePlayers[0].playerKey} is the winner`;
+    loop.stop();
+  }
+};
 
 const playerUpdater = (player) => {
-	if(player.health > 0) player.update();
-}
+  if (player.health > 0) player.update();
+};
 
 const playerRenderer = (player) => {
   if (player.health > 0) {
