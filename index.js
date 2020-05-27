@@ -14,10 +14,13 @@ let { canvas, context } = init();
 initKeys();
 initPointer();
 
+let turnCounter = 'p1';
+
 let player1 = new Sprite({
   x: 100, // starting x,y position of the sprite
   y: 20,
-  color: "red", // fill color of the sprite rectangle
+	color: "red", // fill color of the sprite rectangle
+	playerKey: "p1",
   width: 20, // width and height of the sprite rectangle
   height: 20,
   moveSpeed: 2,
@@ -28,10 +31,11 @@ let player1 = new Sprite({
 let player2 = new Sprite({
   x: 100, // starting x,y position of the sprite
   y: canvas.height - 20,
-  color: "blue", // fill color of the sprite rectangle
+	color: "blue", // fill color of the sprite rectangle
+	playerKey: "p2",
   width: 20, // width and height of the sprite rectangle
   height: 20,
-  moveSpeed: 10,
+  moveSpeed: 2,
   stamina: 100,
   anchor: { x: 0.5, y: 0.5 },
 });
@@ -47,14 +51,28 @@ let loop = GameLoop({
   update: function () {
     // update the game state
     player1.update();
+		player2.update();
+		if(turnCounter === "p1"){
+			movePlayer(player1);
+			playerSwitcher(player1, player2);
+			onPointerDown(() => {
+				shoot(player1, pointer);
+			});
+		} else {
+			movePlayer(player2);
+			playerSwitcher(player2, player1);
+			onPointerDown(() => {
+				shoot(player2, pointer);
+			});
+		}
 
-    movePlayer(player1);
-
-    onPointerDown(() => {
-      shoot(player1, pointer);
-    });
+    
     // console.log(pointer)
-    bulletPool.update();
+		bulletPool.update();
+		
+		if(keyPressed("r")){
+			restartGame();
+		}
   },
   render: function () {
     // render the game state
@@ -67,7 +85,14 @@ let loop = GameLoop({
       10
     );
     bulletPool.render();
-    // player2.render();
+		player2.render();
+		textMaker(
+      context,
+      player2.x - player2.width /2,
+      player2.y - player2.height + 4,
+      player2.stamina,
+      10
+    );
   },
 });
 
@@ -128,5 +153,36 @@ const textMaker = (context, x, y, text, size) => {
   context.font = `${size}px Courier New`;
   context.fillText(text, x, y);
 };
+
+const restartGame = () => {
+	player1 = new Sprite({
+		x: 100, // starting x,y position of the sprite
+		y: 20,
+		color: "red", // fill color of the sprite rectangle
+		width: 20, // width and height of the sprite rectangle
+		height: 20,
+		moveSpeed: 2,
+		stamina: 100,
+		anchor: { x: 0.5, y: 0.5 },
+	});
+
+	player2 = new Sprite({
+		x: 100, // starting x,y position of the sprite
+		y: canvas.height - 20,
+		color: "blue", // fill color of the sprite rectangle
+		width: 20, // width and height of the sprite rectangle
+		height: 20,
+		moveSpeed: 10,
+		stamina: 100,
+		anchor: { x: 0.5, y: 0.5 },
+	});
+}
+
+const playerSwitcher = (player, otherPlayer) => {
+	if(player.stamina < 1){
+		otherPlayer.stamina = 100;
+		turnCounter = otherPlayer.playerKey;
+	}
+}
 
 loop.start(); // start the game
