@@ -17,7 +17,9 @@ let { canvas, context } = init();
 initKeys();
 initPointer();
 
-let turnCounter = "p1";
+let activeSquad = 1;
+let activePlayer = 1;
+
 let startTurn = false;
 let winText = "";
 
@@ -29,31 +31,67 @@ const swapTurnButton = Sprite({
   color: "green",
 });
 
-let player1 = new Sprite({
-  x: canvas.width / 2 - 10, // starting x,y position of the sprite
-  y: 20,
-  health: 20,
-  color: "red", // fill color of the sprite rectangle
-  playerKey: "p1",
-  width: 20, // width and height of the sprite rectangle
-  height: 20,
-  moveSpeed: 2,
-  stamina: 100,
-  anchor: { x: 0.5, y: 0.5 },
-});
+// let player1 = new Sprite({
+//   x: canvas.width / 2 - 10, // starting x,y position of the sprite
+//   y: 20,
+//   health: 20,
+//   color: "red", // fill color of the sprite rectangle
+//   playerKey: "p1",
+//   width: 20, // width and height of the sprite rectangle
+//   height: 20,
+//   moveSpeed: 2,
+//   stamina: 100,
+//   anchor: { x: 0.5, y: 0.5 },
+// });
 
-let player2 = new Sprite({
-  x: canvas.width / 2 - 10, // starting x,y position of the sprite
-  y: canvas.height - 20,
-  health: 20,
-  color: "blue", // fill color of the sprite rectangle
-  playerKey: "p2",
-  width: 20, // width and height of the sprite rectangle
-  height: 20,
-  moveSpeed: 2,
-  stamina: 100,
-  anchor: { x: 0.5, y: 0.5 },
-});
+// let player2 = new Sprite({
+//   x: canvas.width / 2 - 10, // starting x,y position of the sprite
+//   y: canvas.height - 20,
+//   health: 20,
+//   color: "blue", // fill color of the sprite rectangle
+//   playerKey: "p2",
+//   width: 20, // width and height of the sprite rectangle
+//   height: 20,
+//   moveSpeed: 2,
+//   stamina: 100,
+//   anchor: { x: 0.5, y: 0.5 },
+// });
+
+let squads = [
+  {
+    squadName: 1,
+    players: [],
+  },
+  {
+    squadName: 2,
+    players: [],
+  },
+];
+
+const buildTeams = (squads) => {
+  squads.forEach((squad) => {
+    for (let j = 0; j < 3; j++) {
+      let player = new Sprite({
+        x: (canvas.width / 2 - 10) * j * 0.33, // starting x,y position of the sprite
+        y: squad.squadName === 1 ? 20 : canvas.height - 20,
+        health: 20,
+        color: squad.squadName === 1 ? "blue" : "red", // fill color of the sprite rectangle
+				playerKey: j + 1,
+				team: squad.squadName,
+        width: 20, // width and height of the sprite rectangle
+        height: 20,
+        moveSpeed: 2,
+        stamina: 100,
+        anchor: { x: 0.5, y: 0.5 },
+      });
+      squad.players.push(player);
+    }
+  });
+};
+
+buildTeams(squads);
+
+console.log(squads);
 
 const bulletPool = Pool({
   create: Sprite,
@@ -66,32 +104,65 @@ let loop = GameLoop({
   update: function () {
     // update the game state
 
-    playerUpdater(player1);
-    playerUpdater(player2);
+    // playerUpdater(player1);
+    // playerUpdater(player2);
 
-    if (startTurn) {
-      if (turnCounter === "p1") {
-        movePlayer(player1);
-        playerSwitcher(player1, player2);
-        onPointerDown(() => {
-          shoot(player1, pointer);
-        });
-        bulletCollision(player2);
+    squads.forEach((squad) => {
+			squad.players.forEach((player) => {
+				playerUpdater(player);
+				bulletCollision(player);
+			});
+      if (startTurn) {
+        if (activeSquad === squad.squadName) {
+          squad.players.forEach((player) => {
+            if (activePlayer === player.playerKey) {
+              movePlayer(player);
+              playerSwitcher(player);
+              onPointerDown(() => {
+                shoot(player, pointer);
+							});
+						}
+          });
+				}
       } else {
-        movePlayer(player2);
-        playerSwitcher(player2, player1);
-        onPointerDown(() => {
-          shoot(player2, pointer);
-        });
-        bulletCollision(player1);
+        track(swapTurnButton);
+				// checkWin();
+				replenishStamina(squad);
+        if (pointerPressed("left") && pointerOver(swapTurnButton)) {
+          startTurn = true;
+        }
       }
-    } else {
-      track(swapTurnButton);
-      checkWin([player1, player2]);
-      if (pointerPressed("left") && pointerOver(swapTurnButton)) {
-        startTurn = true;
-      }
-    }
+    });
+
+    //Create number of teams (2)
+    //Create all players in array. (3 per side)
+    //Manage which team moves their players
+    //Switch player turns on team
+    //When all players have gone, switch entire team.
+
+    // if (startTurn) {
+    //   if (activeSquad === 1) {
+    //     movePlayer(player1);
+    //     squadSwitcher(player1, player2);
+    //     onPointerDown(() => {
+    //       shoot(player1, pointer);
+    //     });
+    //     bulletCollision(player2);
+    //   } else {
+    //     movePlayer(player2);
+    //     squadSwitcher(player2, player1);
+    //     onPointerDown(() => {
+    //       shoot(player2, pointer);
+    //     });
+    //     bulletCollision(player1);
+    //   }
+    // } else {
+    //   track(swapTurnButton);
+    //   checkWin([player1, player2]);
+    //   if (pointerPressed("left") && pointerOver(swapTurnButton)) {
+    //     startTurn = true;
+    //   }
+    // }
 
     bulletPool.update();
   },
@@ -99,8 +170,9 @@ let loop = GameLoop({
     // render the game state
     bulletPool.render();
 
-    playerRenderer(player1);
-    playerRenderer(player2);
+    squads.forEach((squad) => {
+      squad.players.forEach((player) => playerRenderer(player));
+    });
 
     if (winText) {
     }
@@ -112,7 +184,7 @@ let loop = GameLoop({
         context,
         swapTurnButton.x + 4,
         swapTurnButton.y + swapTurnButton.height / 2 + 2,
-        `START ${turnCounter.toUpperCase()} TURN`,
+        `START T${activeSquad} TURN`,
         8
       );
     } else {
@@ -141,7 +213,7 @@ const movePlayer = (player) => {
 };
 
 const shoot = (player, cursor) => {
-  if (player.stamina < 1 || player.health < 1) return;
+  if (player.stamina < 1 || player.health < 1 || !startTurn) return;
   drainStamina(16, player);
 
   let betweenDistance = Between(player.x, player.y, cursor.x, cursor.y);
@@ -156,7 +228,8 @@ const shoot = (player, cursor) => {
     y: player.y,
     color: "green",
     damage: 5,
-    width: 5,
+		width: 5,
+		team: player.team,
     anchor: { x: 0.5, y: 0.5 },
     height: 5,
     ttl: Infinity,
@@ -166,7 +239,8 @@ const shoot = (player, cursor) => {
 };
 
 const Between = (x1, y1, x2, y2) => {
-  //Get the arc tangent of two objects and rotate it 90 degrees in radians.
+  //Get the arc tangent of two objects and rotate it 90 degrees clock-wise in radians.
+  //The 90 degree turn is due to the location of where 0,0 lies in the top-right corner.
   return Math.atan2(y2 - y1, x2 - x1) + 1.5708;
 };
 
@@ -178,6 +252,12 @@ const drainStamina = (drainAmount, player) => {
   }
 };
 
+const replenishStamina = (currSquad) => {
+	currSquad.players.forEach(player => {
+		player.stamina < 100 ? player.stamina = 100 : null;
+	});
+}
+
 const textMaker = (context, x, y, text, size, color) => {
   if (!size) {
     size = 10;
@@ -187,22 +267,35 @@ const textMaker = (context, x, y, text, size, color) => {
   context.fillText(text, x, y);
 };
 
-const playerSwitcher = (player, otherPlayer) => {
-  if (player.stamina < 1) {
-    startTurn = false;
-    otherPlayer.stamina = 100;
-    turnCounter = otherPlayer.playerKey;
+const squadSwitcher = () => {
+  activeSquad++;
+	startTurn = false;
+  if (activeSquad > squads.length) {
+    activeSquad = 1;
   }
 };
 
-const bulletCollision = (player) => {
+const playerSwitcher = (currentPlayer) => {
+  if (currentPlayer.stamina < 1) {
+    activePlayer = currentPlayer.playerKey + 1;
+  }
+
+  if (activePlayer > 3) {
+    squadSwitcher();
+    activePlayer = 1;
+  }
+};
+
+const bulletCollision = (player, activeSquad) => {
   let bullets = bulletPool.getAliveObjects();
   bullets.forEach((b) => {
-    if (b.collidesWith(player)) {
-      //Collide functionality
-      b.ttl = 0;
-      player.health -= b.damage;
-    }
+		if(player.team !== b.team){
+			if (b.collidesWith(player)) {
+				//Collide functionality
+				b.ttl = 0;
+				player.health -= b.damage;
+			}
+		}
   });
 };
 
