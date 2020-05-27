@@ -72,7 +72,7 @@ const buildTeams = (squads) => {
   squads.forEach((squad) => {
     for (let j = 0; j < 3; j++) {
       let player = new Sprite({
-        x: (canvas.width / 2 - 10) * j * 0.33, // starting x,y position of the sprite
+        x: (canvas.width / 2 - 20) * j + 20, // starting x,y position of the sprite
         y: squad.squadName === 1 ? 20 : canvas.height - 20,
         health: 20,
         color: squad.squadName === 1 ? "blue" : "red", // fill color of the sprite rectangle
