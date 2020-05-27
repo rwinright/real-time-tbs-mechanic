@@ -134,36 +134,6 @@ let loop = GameLoop({
       }
     });
 
-    //Create number of teams (2)
-    //Create all players in array. (3 per side)
-    //Manage which team moves their players
-    //Switch player turns on team
-    //When all players have gone, switch entire team.
-
-    // if (startTurn) {
-    //   if (activeSquad === 1) {
-    //     movePlayer(player1);
-    //     squadSwitcher(player1, player2);
-    //     onPointerDown(() => {
-    //       shoot(player1, pointer);
-    //     });
-    //     bulletCollision(player2);
-    //   } else {
-    //     movePlayer(player2);
-    //     squadSwitcher(player2, player1);
-    //     onPointerDown(() => {
-    //       shoot(player2, pointer);
-    //     });
-    //     bulletCollision(player1);
-    //   }
-    // } else {
-    //   track(swapTurnButton);
-    //   checkWin([player1, player2]);
-    //   if (pointerPressed("left") && pointerOver(swapTurnButton)) {
-    //     startTurn = true;
-    //   }
-    // }
-
     bulletPool.update();
   },
   render: function () {
