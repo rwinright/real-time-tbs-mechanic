@@ -286,7 +286,7 @@ const playerSwitcher = (currentPlayer) => {
   }
 };
 
-const bulletCollision = (player, activeSquad) => {
+const bulletCollision = (player) => {
   let bullets = bulletPool.getAliveObjects();
   bullets.forEach((b) => {
 		if(player.team !== b.team){
