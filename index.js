@@ -91,7 +91,7 @@ const buildTeams = (squads) => {
 
 buildTeams(squads);
 
-console.log(squads);
+// console.log(squads);
 
 const bulletPool = Pool({
   create: Sprite,
@@ -243,7 +243,8 @@ const squadSwitcher = () => {
 };
 
 const playerSwitcher = (currentPlayer) => {
-  if (currentPlayer.stamina < 1) {
+  // console.log(currentPlayer)
+  if (currentPlayer.stamina < 1 || currentPlayer.health < 0) {
     activePlayer = currentPlayer.playerKey + 1;
   }
 
