@@ -22,6 +22,7 @@ let activePlayer = 1;
 
 let startTurn = false;
 let winText = "";
+let loseText = "";
 
 const swapTurnButton = Sprite({
   x: canvas.width / 2 - 35,
@@ -121,7 +122,7 @@ let loop = GameLoop({
 				}
       } else {
         track(swapTurnButton);
-				// checkWin();
+				checkWin();
 				replenishStamina(squad);
         if (pointerPressed("left") && pointerOver(swapTurnButton)) {
           startTurn = true;
@@ -139,9 +140,6 @@ let loop = GameLoop({
       squad.players.forEach((player) => playerRenderer(player));
     });
 
-    if (winText) {
-    }
-
     //Swap turn button
     if (!startTurn && !winText) {
       swapTurnButton.render();
@@ -155,11 +153,20 @@ let loop = GameLoop({
     } else {
       textMaker(
         context,
-        canvas.width / 2 - winText.length * 5,
+        canvas.width / 2 - loseText.length * 5,
         canvas.height / 2,
+        loseText,
+        20,
+        loseText.includes("1") ? "red" : "blue"
+      );
+
+      textMaker(
+        context,
+        canvas.width / 2 - winText.length * 5,
+        canvas.height / 2 - 30,
         winText,
         20,
-        winText.includes("p1") ? "red" : "blue"
+        winText.includes("1") ? "red" : "blue"
       );
     }
   },
@@ -264,15 +271,14 @@ const bulletCollision = (player) => {
   });
 };
 
-const checkWin = (players) => {
-  activePlayers = players.filter((player) => {
-    if (player.health > 0) return player;
-  });
-
-  if (activePlayers.length === 1) {
-    winText = `${activePlayers[0].playerKey} is the winner`;
-    loop.stop();
+const checkWin = () => {
+  let squadActivePlayers = squads[activeSquad - 1]['players'].filter(player => player.health > 0).length;
+  
+  if(squadActivePlayers <= 0){
+    winText = `Squad ${activeSquad} has been eliminated`;
+    loseText = `Squad ${activeSquad - 1 == 0 ? "2" : "1"} wins`
   }
+  
 };
 
 const playerUpdater = (player) => {
